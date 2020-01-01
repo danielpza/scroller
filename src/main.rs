@@ -5,6 +5,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
+use sdl2::video::FullscreenType;
 use std::time::Duration;
 
 trait ExtCanvas<T> {
@@ -58,12 +59,24 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::KeyDown {
+                    keycode: Some(Keycode::Return),
+                    ..
+                } => {
+                    let window = canvas.window_mut();
+                    window.set_fullscreen(
+                        if window.fullscreen_state() == FullscreenType::True {
+                            FullscreenType::Off
+                        } else {
+                            FullscreenType::True
+                        },
+                    )?;
+                }
                 _ => {}
             }
         }
         // logic
         // draw
-        canvas.clear();
         canvas.clear_color(bgcolor);
         canvas.fill_rect_color(player.color, player.shape);
         canvas.present();
