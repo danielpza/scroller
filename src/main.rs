@@ -103,7 +103,7 @@ fn main() -> Result<(), String> {
         canvas.clear_color(bgcolor);
         canvas.fill_rect_color(player.color, player.shape);
         canvas.present();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
+        std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
     }
     Ok(())
 }
