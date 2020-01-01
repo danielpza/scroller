@@ -40,7 +40,7 @@ fn main() -> Result<(), String> {
         .build()
         .unwrap();
 
-    let player = Player {
+    let mut player = Player {
         shape: Rect::new(0, 0, 32, 32),
         color: Color::RGB(0, 255, 255),
     };
@@ -50,6 +50,7 @@ fn main() -> Result<(), String> {
     canvas.clear_color(bgcolor);
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
+    let speed = 15;
     'running: loop {
         // input
         for event in event_pump.poll_iter() {
@@ -76,6 +77,11 @@ fn main() -> Result<(), String> {
             }
         }
         // logic
+        if player.shape.bottom() + speed < height as i32 {
+            player.shape.offset(0, speed);
+        } else {
+            player.shape.set_bottom(height as i32);
+        }
         // draw
         canvas.clear_color(bgcolor);
         canvas.fill_rect_color(player.color, player.shape);
