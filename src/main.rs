@@ -62,6 +62,7 @@ fn main() -> Result<(), String> {
                 } => break 'running,
                 Event::KeyDown {
                     keycode: Some(Keycode::Return),
+                    keymod: sdl2::keyboard::Mod::LCTRLMOD,
                     ..
                 } => {
                     let window = canvas.window_mut();
