@@ -2,6 +2,7 @@ extern crate sdl2;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::keyboard::Scancode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
@@ -50,7 +51,8 @@ fn main() -> Result<(), String> {
     canvas.clear_color(bgcolor);
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
-    let speed = 15;
+    let speed = 3;
+    let gravity = 4;
     'running: loop {
         // input
         for event in event_pump.poll_iter() {
@@ -78,11 +80,25 @@ fn main() -> Result<(), String> {
             }
         }
         // logic
-        if player.shape.bottom() + speed < height as i32 {
-            player.shape.offset(0, speed);
+        if player.shape.bottom() + gravity < height as i32 {
+            player.shape.offset(0, gravity);
         } else {
             player.shape.set_bottom(height as i32);
         }
+
+        let next_speed = {
+            let mut temp = 0;
+            if event_pump.keyboard_state().is_scancode_pressed(Scancode::A) {
+                temp -= speed;
+            }
+            if event_pump.keyboard_state().is_scancode_pressed(Scancode::D) {
+                temp += speed;
+            }
+            temp
+        };
+
+        player.shape.offset(next_speed, 0);
+
         // draw
         canvas.clear_color(bgcolor);
         canvas.fill_rect_color(player.color, player.shape);
