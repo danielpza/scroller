@@ -106,9 +106,12 @@ pub struct Input {
     pub jump: bool,
 }
 
+const WIDTH: i32 = 14;
+
 pub struct Game {
-    width: i32,
-    height: i32,
+    pub width: i32,
+    pub height: i32,
+    pub floor: [i32; WIDTH as usize],
     pub player: Player,
 }
 
@@ -117,23 +120,40 @@ impl Game {
         Game {
             width,
             height,
+            floor: [height - 2; WIDTH as usize],
             player: Player {
-                shape: Rect::new(0.0, 0.0, 1.0, 1.0),
+                shape: Rect::new(1.0, 1.0, 0.8, 0.8),
                 speed: Point { x: 0.0, y: 0.0 },
             },
+        }
+    }
+    pub fn get_top(&self, from: f32, to: f32) -> f32 {
+        let in_range = |x: f32| x.max(0.0).min(WIDTH as f32);
+        let value = (&self.floor[in_range(from) as usize..in_range(to) as usize])
+            .iter()
+            .min();
+        if let Some(v) = value {
+            *v as f32
+        } else {
+            WIDTH as f32
         }
     }
     pub fn step(&mut self, input: Input) {
         let speed = 0.1;
         let gravity = 0.01;
 
-        if self.player.shape.bottom() + gravity < self.height as f32 {
+        let under = self.get_top(
+            self.player.shape.left().floor(),
+            self.player.shape.right().ceil(),
+        );
+
+        if self.player.shape.bottom() + self.player.speed.y < under {
             self.player.speed.y += gravity;
         } else {
             self.player.speed.y = 0.0;
-            self.player.shape.set_bottom(self.height as f32);
+            self.player.shape.set_bottom(under);
             if input.jump {
-                self.player.speed.y = -force_to_jump(self.player.shape.size.y * 1.2, gravity);
+                self.player.speed.y = -force_to_jump(1.2, gravity);
             }
         }
 

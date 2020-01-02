@@ -23,7 +23,7 @@ impl<T: sdl2::render::RenderTarget> ExtCanvas<T> for Canvas<T> {
     }
     fn fill_rect_color(&mut self, color: Color, rect: sdl2::rect::Rect) {
         self.set_draw_color(color);
-        self.fill_rect(rect).unwrap();
+        self.fill_rect(rect).unwrap()
     }
 }
 impl Into<sdl2::rect::Rect> for Rect {
@@ -40,8 +40,9 @@ impl Into<sdl2::rect::Rect> for Rect {
 fn main() -> Result<(), String> {
     let width = 800;
     let height = 600;
-    let size = 10;
-    let scale = height as f32 / size as f32;
+    let sizey = 10;
+    let scale = height as f32 / sizey as f32;
+    let sizex = ((width as f32) / scale).ceil() as i32;
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
@@ -50,12 +51,12 @@ fn main() -> Result<(), String> {
         .build()
         .unwrap();
 
-    let mut game = core::Game::new(size, size);
+    let mut game = core::Game::new(sizex, sizey);
     let player_color = Color::RGB(255, 255, 255);
     let mut canvas = window.into_canvas().build().unwrap();
     let bgcolor = Color::RGB(100, 100, 100);
+    let block_color = Color::RGB(10, 10, 10);
     canvas.clear_color(bgcolor);
-    canvas.fill_rect_color(player_color, game.player.shape.into());
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
@@ -96,6 +97,15 @@ fn main() -> Result<(), String> {
             right: event_pump.keyboard_state().is_scancode_pressed(Scancode::D),
         });
         canvas.clear_color(bgcolor);
+        canvas.set_draw_color(block_color);
+        let mut rect = sdl2::rect::Rect::new(0, 0, scale as u32, scale as u32);
+        for (i, h) in game.floor.iter().enumerate() {
+            rect.set_x(i as i32 * scale as i32);
+            for j in *h..sizey {
+                rect.set_y(j as i32 * scale as i32);
+                canvas.fill_rect(rect)?;
+            }
+        }
         canvas.fill_rect_color(player_color, (game.player.shape * scale).into());
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
