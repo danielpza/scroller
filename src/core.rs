@@ -220,6 +220,6 @@ impl Game {
         }
 
         self.player.shape.position += self.player.speed;
-        self.offset += speed;
+        self.offset = self.player.shape.left() - 3.0;
     }
 }
