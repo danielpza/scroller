@@ -78,6 +78,9 @@ impl Rect {
     pub fn set_right(&mut self, right: f32) {
         self.position.x = right - self.size.x;
     }
+    pub fn offset(&mut self, point: Point) {
+        self.position += point;
+    }
 }
 
 impl std::ops::Mul<f32> for Rect {
@@ -120,7 +123,22 @@ impl Game {
         Game {
             width,
             height,
-            floor: [height - 2; WIDTH as usize],
+            floor: [
+                height - 2,
+                height - 2,
+                height - 2,
+                height - 2,
+                height - 3,
+                height - 2,
+                height - 3,
+                height - 2,
+                height - 2,
+                height - 2,
+                height - 2,
+                height - 2,
+                height - 2,
+                height - 2,
+            ],
             player: Player {
                 shape: Rect::new(1.0, 1.0, 0.8, 0.8),
                 speed: Point { x: 0.0, y: 0.0 },
@@ -142,20 +160,7 @@ impl Game {
         let speed = 0.1;
         let gravity = 0.01;
 
-        let under = self.get_top(
-            self.player.shape.left().floor(),
-            self.player.shape.right().ceil(),
-        );
-
-        if self.player.shape.bottom() + self.player.speed.y < under {
-            self.player.speed.y += gravity;
-        } else {
-            self.player.speed.y = 0.0;
-            self.player.shape.set_bottom(under);
-            if input.jump {
-                self.player.speed.y = -force_to_jump(1.2, gravity);
-            }
-        }
+        self.player.speed.y += gravity;
 
         self.player.speed.x = 0.0;
         if input.left {
@@ -163,6 +168,35 @@ impl Game {
         }
         if input.right {
             self.player.speed.x += speed;
+        }
+
+        let under = self.get_top(
+            self.player.shape.left().floor(),
+            self.player.shape.right().ceil(),
+        );
+
+        if self.player.shape.bottom() + self.player.speed.y >= under {
+            self.player.speed.y = 0.0;
+            self.player.shape.set_bottom(under);
+            if input.jump {
+                self.player.speed.y = -force_to_jump(1.2, gravity);
+            }
+        }
+
+        let underh = self.get_top(
+            (self.player.shape.left() + self.player.speed.x).floor(),
+            (self.player.shape.right() + self.player.speed.x).ceil(),
+        );
+
+        if self.player.shape.bottom() > underh {
+            if self.player.speed.x > 0.0 {
+                self.player
+                    .shape
+                    .set_right(self.player.shape.right().ceil())
+            } else if self.player.speed.x < 0.0 {
+                self.player.shape.set_left(self.player.shape.left().floor())
+            }
+            self.player.speed.x = 0.0;
         }
 
         self.player.shape.position += self.player.speed;
