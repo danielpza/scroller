@@ -171,6 +171,7 @@ fn main() -> Result<(), String> {
         .unwrap();
     let mut canvas = window.into_canvas().present_vsync().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
+    event_pump.disable_event(sdl2::event::EventType::MouseMotion);
     loop {
         match main_menu_loop(&mut canvas, &mut event_pump)? {
             End::Play => match game_loop(&mut canvas, &mut event_pump)? {
