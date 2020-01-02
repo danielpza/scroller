@@ -109,12 +109,54 @@ pub struct Input {
 
 const WIDTH: i32 = 14;
 
+pub struct Map {
+    height: i32,
+    floor: [i32; WIDTH as usize],
+}
+
+impl Map {
+    pub fn new(height: i32) -> Map {
+        Map {
+            height,
+            floor: [
+                height - 2,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+                height - 1,
+            ],
+        }
+    }
+    pub fn get_top(&self, from: i32, to: i32) -> i32 {
+        let to = (to % WIDTH) as usize;
+        let mut from = (from % WIDTH) as usize;
+        let mut top = self.height;
+        while from != to {
+            top = top.min(self.floor[from]);
+            from = (from + 1) % WIDTH as usize;
+        }
+        top
+    }
+    pub fn height_at(&self, pos: i32) -> i32 {
+        self.floor[(pos % WIDTH) as usize]
+    }
+}
+
 pub struct Game {
     pub width: i32,
     pub height: i32,
-    pub floor: [i32; WIDTH as usize],
     pub player: Player,
     pub offset: f32,
+    pub map: Map,
 }
 
 impl Game {
@@ -122,22 +164,7 @@ impl Game {
         Game {
             width,
             height,
-            floor: [
-                height - 2,
-                height - 2,
-                height - 2,
-                height - 2,
-                height - 3,
-                height - 2,
-                height - 3,
-                height - 2,
-                height - 2,
-                height - 2,
-                height - 2,
-                height - 2,
-                height - 3,
-                height - 4,
-            ],
+            map: Map::new(height),
             offset: 0.0,
             player: Player {
                 shape: Rect::new(WIDTH as f32 / 3.0, 1.0, 0.8, 0.8),
@@ -145,17 +172,7 @@ impl Game {
             },
         }
     }
-    pub fn get_top(&self, from: f32, to: f32) -> f32 {
-        let in_range = |x: f32| x.max(0.0).min(WIDTH as f32);
-        let value = (&self.floor[in_range(from) as usize..in_range(to) as usize])
-            .iter()
-            .min();
-        if let Some(v) = value {
-            *v as f32
-        } else {
-            self.height as f32
-        }
-    }
+
     pub fn step(&mut self, input: Input) {
         let gravity = 0.01;
         let speed = 0.1;
@@ -163,10 +180,10 @@ impl Game {
         self.player.speed.x = speed;
         self.player.speed.y += gravity;
 
-        let under = self.get_top(
-            self.player.shape.left().floor(),
-            self.player.shape.right().ceil(),
-        );
+        let under = self.map.get_top(
+            self.player.shape.left().floor() as i32,
+            self.player.shape.right().ceil() as i32,
+        ) as f32;
 
         if self.player.shape.bottom() + self.player.speed.y >= under {
             self.player.speed.y = 0.0;
@@ -176,10 +193,10 @@ impl Game {
             }
         }
 
-        let underh = self.get_top(
-            (self.player.shape.left() + self.player.speed.x).floor(),
-            (self.player.shape.right() + self.player.speed.x).ceil(),
-        );
+        let underh = self.map.get_top(
+            (self.player.shape.left() + self.player.speed.x).floor() as i32,
+            (self.player.shape.right() + self.player.speed.x).ceil() as i32,
+        ) as f32;
 
         if self.player.shape.bottom() > underh {
             if self.player.speed.x > 0.0 {
