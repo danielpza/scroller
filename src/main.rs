@@ -53,7 +53,7 @@ fn main() -> Result<(), String> {
 
     let mut game = core::Game::new(sizex, sizey);
     let player_color = Color::RGB(255, 255, 255);
-    let mut canvas = window.into_canvas().build().unwrap();
+    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
     let bgcolor = Color::RGB(100, 100, 100);
     let block_color = Color::RGB(10, 10, 10);
     canvas.clear_color(bgcolor);
