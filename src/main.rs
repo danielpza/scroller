@@ -5,6 +5,7 @@ use crate::core::*;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::keyboard::Scancode;
 use sdl2::pixels::Color;
 use sdl2::render::Canvas;
 use sdl2::video::FullscreenType;
@@ -59,7 +60,6 @@ fn main() -> Result<(), String> {
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
-        let mut jump = false;
         // input
         for event in event_pump.poll_iter() {
             match event {
@@ -68,11 +68,6 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
-                Event::KeyDown {
-                    keycode: Some(Keycode::W),
-                    repeat: false,
-                    ..
-                } => jump = true,
                 Event::KeyDown {
                     keycode: Some(Keycode::Return),
                     keymod: sdl2::keyboard::Mod::LCTRLMOD,
@@ -90,7 +85,9 @@ fn main() -> Result<(), String> {
                 _ => {}
             }
         }
-        game.step(Input { jump });
+        game.step(Input {
+            jump: event_pump.keyboard_state().is_scancode_pressed(Scancode::W),
+        });
         canvas.clear_color(bgcolor);
         canvas.set_draw_color(block_color);
         let mut rect = sdl2::rect::Rect::new(0, 0, scale as u32, scale as u32);

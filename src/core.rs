@@ -1,3 +1,7 @@
+extern crate rand;
+
+use rand::Rng;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point {
     pub x: f32,
@@ -107,38 +111,25 @@ pub struct Input {
     pub jump: bool,
 }
 
-const WIDTH: i32 = 14;
+const WIDTH: i32 = 15;
 
 pub struct Map {
     height: i32,
     floor: [i32; WIDTH as usize],
+    prev: i32,
 }
 
 impl Map {
     pub fn new(height: i32) -> Map {
         Map {
             height,
-            floor: [
-                height - 2,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-                height - 1,
-            ],
+            prev: -1,
+            floor: [height; WIDTH as usize],
         }
     }
     pub fn get_top(&self, from: i32, to: i32) -> i32 {
-        let to = (to % WIDTH) as usize;
-        let mut from = (from % WIDTH) as usize;
+        let to = self.clip_index(to);
+        let mut from = self.clip_index(from);
         let mut top = self.height;
         while from != to {
             top = top.min(self.floor[from]);
@@ -146,8 +137,26 @@ impl Map {
         }
         top
     }
+    fn clip_index(&self, pos: i32) -> usize {
+        (((pos % WIDTH) + WIDTH) % WIDTH) as usize
+    }
     pub fn height_at(&self, pos: i32) -> i32 {
-        self.floor[(pos % WIDTH) as usize]
+        self.floor[self.clip_index(pos)]
+    }
+    pub fn set(&mut self, pos: i32, value: i32) {
+        self.floor[self.clip_index(pos)] = value;
+    }
+    pub fn build(&mut self, to: i32) {
+        for i in self.prev + 1..to + 1 {
+            let random = rand::thread_rng().gen_range(-1, 2);
+            self.set(
+                i,
+                (self.height_at(i - 1) + random)
+                    .max(self.height / 2)
+                    .min(self.height - 1),
+            );
+        }
+        self.prev = to;
     }
 }
 
@@ -177,6 +186,7 @@ impl Game {
         let gravity = 0.01;
         let speed = 0.1;
 
+        self.map.build(self.offset as i32 + self.width);
         self.player.speed.x = speed;
         self.player.speed.y += gravity;
 
