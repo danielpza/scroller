@@ -128,19 +128,16 @@ impl Map {
         }
     }
     pub fn get_top(&self, from: i32, to: i32) -> i32 {
-        let to = self.clip_index(to);
-        let mut from = self.clip_index(from);
         let mut top = self.height;
-        while from != to {
-            top = top.min(self.floor[from]);
-            from = (from + 1) % WIDTH as usize;
+        for i in from..to {
+            top = top.min(self.get(i));
         }
         top
     }
     fn clip_index(&self, pos: i32) -> usize {
         (((pos % WIDTH) + WIDTH) % WIDTH) as usize
     }
-    pub fn height_at(&self, pos: i32) -> i32 {
+    pub fn get(&self, pos: i32) -> i32 {
         self.floor[self.clip_index(pos)]
     }
     pub fn set(&mut self, pos: i32, value: i32) {
@@ -149,12 +146,7 @@ impl Map {
     pub fn build(&mut self, to: i32) {
         for i in self.prev + 1..to + 1 {
             let random = rand::thread_rng().gen_range(-1, 2);
-            self.set(
-                i,
-                (self.height_at(i - 1) + random)
-                    .max(self.height / 2)
-                    .min(self.height - 1),
-            );
+            self.set(i, (self.get(i - 1) + random).max(3).min(self.height - 1));
         }
         self.prev = to;
     }
