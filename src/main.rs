@@ -38,6 +38,7 @@ impl Into<sdl2::rect::Rect> for Rect {
 }
 
 enum End {
+    Play,
     Finish,
     Quit,
 }
@@ -103,6 +104,29 @@ fn game_loop(
     }
 }
 
+fn main_menu_loop(
+    canvas: &mut sdl2::render::WindowCanvas,
+    event_pump: &mut sdl2::EventPump,
+) -> Result<End, String> {
+    loop {
+        canvas.clear_color(Color::RGB(100, 100, 100));
+        canvas.present();
+        let event = event_pump.wait_event();
+        match event {
+            Event::Quit { .. } => break Ok(End::Quit),
+            Event::KeyDown {
+                keycode: Some(Keycode::Escape),
+                ..
+            } => break Ok(End::Quit),
+            Event::KeyDown {
+                keycode: Some(Keycode::Space),
+                ..
+            } => break Ok(End::Play),
+            _ => {}
+        }
+    }
+}
+
 fn main() -> Result<(), String> {
     let width = 800;
     let height = 600;
@@ -116,9 +140,13 @@ fn main() -> Result<(), String> {
     let mut canvas = window.into_canvas().present_vsync().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
     loop {
-        match game_loop(&mut canvas, &mut event_pump)? {
-            End::Finish => (),
+        match main_menu_loop(&mut canvas, &mut event_pump)? {
+            End::Play => match game_loop(&mut canvas, &mut event_pump)? {
+                End::Quit => break Ok(()),
+                _ => (),
+            },
             End::Quit => break Ok(()),
+            _ => (),
         }
     }
 }
