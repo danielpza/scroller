@@ -37,28 +37,19 @@ impl Into<sdl2::rect::Rect> for Rect {
     }
 }
 
-fn main() -> Result<(), String> {
-    let width = 800;
-    let height = 600;
+fn game_loop(
+    canvas: &mut sdl2::render::WindowCanvas,
+    event_pump: &mut sdl2::EventPump,
+) -> Result<(), String> {
     let sizey = 10;
-    let scale = height as f32 / sizey as f32;
-    let sizex = ((width as f32) / scale).ceil() as i32;
-    let sdl_context = sdl2::init()?;
-    let video_subsystem = sdl_context.video()?;
-    let window = video_subsystem
-        .window("scroller", width, height)
-        .position_centered()
-        .build()
-        .unwrap();
-
+    let sizex = 14;
+    let scale = 60;
     let mut game = core::Game::new(sizex, sizey);
     let player_color = Color::RGB(255, 255, 255);
-    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
     let bgcolor = Color::RGB(100, 100, 100);
     let block_color = Color::RGB(10, 10, 10);
     canvas.clear_color(bgcolor);
     canvas.present();
-    let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
         // input
         for event in event_pump.poll_iter() {
@@ -101,9 +92,24 @@ fn main() -> Result<(), String> {
         }
         let mut rect = game.player.shape;
         rect.position.x -= game.offset;
-        canvas.fill_rect_color(player_color, (rect * scale).into());
+        canvas.fill_rect_color(player_color, (rect * scale as f32).into());
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
     }
     Ok(())
+}
+
+fn main() -> Result<(), String> {
+    let width = 800;
+    let height = 600;
+    let sdl_context = sdl2::init()?;
+    let video_subsystem = sdl_context.video()?;
+    let window = video_subsystem
+        .window("scroller", width, height)
+        .position_centered()
+        .build()
+        .unwrap();
+    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
+    let mut event_pump = sdl_context.event_pump().unwrap();
+    game_loop(&mut canvas, &mut event_pump)
 }
