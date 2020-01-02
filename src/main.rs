@@ -1,17 +1,19 @@
 extern crate sdl2;
 
+mod core;
+use crate::core::*;
+
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::keyboard::Scancode;
 use sdl2::pixels::Color;
-use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::FullscreenType;
 use std::time::Duration;
 
 trait ExtCanvas<T> {
     fn clear_color(&mut self, color: Color);
-    fn fill_rect_color(&mut self, color: Color, rect: Rect);
+    fn fill_rect_color(&mut self, color: Color, rect: sdl2::rect::Rect);
 }
 
 impl<T: sdl2::render::RenderTarget> ExtCanvas<T> for Canvas<T> {
@@ -19,15 +21,20 @@ impl<T: sdl2::render::RenderTarget> ExtCanvas<T> for Canvas<T> {
         self.set_draw_color(color);
         self.clear();
     }
-    fn fill_rect_color(&mut self, color: Color, rect: Rect) {
+    fn fill_rect_color(&mut self, color: Color, rect: sdl2::rect::Rect) {
         self.set_draw_color(color);
         self.fill_rect(rect).unwrap();
     }
 }
-
-struct Player {
-    shape: Rect,
-    color: Color,
+impl Into<sdl2::rect::Rect> for Rect {
+    fn into(self) -> sdl2::rect::Rect {
+        sdl2::rect::Rect::new(
+            self.position.x as i32,
+            self.position.y as i32,
+            self.size.x as u32,
+            self.size.y as u32,
+        )
+    }
 }
 
 fn main() -> Result<(), String> {
@@ -41,18 +48,14 @@ fn main() -> Result<(), String> {
         .build()
         .unwrap();
 
-    let mut player = Player {
-        shape: Rect::new(0, 0, 32, 32),
-        color: Color::RGB(0, 255, 255),
-    };
+    let mut game = core::Game::new(width as i32, height as i32);
+    let player_color = Color::RGB(255, 255, 255);
     let mut canvas = window.into_canvas().build().unwrap();
     let bgcolor = Color::RGB(100, 100, 100);
-    canvas.fill_rect_color(player.color, player.shape);
     canvas.clear_color(bgcolor);
+    canvas.fill_rect_color(player_color, game.player.shape.into());
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
-    let speed = 3;
-    let gravity = 4;
     'running: loop {
         // input
         for event in event_pump.poll_iter() {
@@ -79,29 +82,12 @@ fn main() -> Result<(), String> {
                 _ => {}
             }
         }
-        // logic
-        if player.shape.bottom() + gravity < height as i32 {
-            player.shape.offset(0, gravity);
-        } else {
-            player.shape.set_bottom(height as i32);
-        }
-
-        let next_speed = {
-            let mut temp = 0;
-            if event_pump.keyboard_state().is_scancode_pressed(Scancode::A) {
-                temp -= speed;
-            }
-            if event_pump.keyboard_state().is_scancode_pressed(Scancode::D) {
-                temp += speed;
-            }
-            temp
-        };
-
-        player.shape.offset(next_speed, 0);
-
-        // draw
+        game.step(Input {
+            left: event_pump.keyboard_state().is_scancode_pressed(Scancode::A),
+            right: event_pump.keyboard_state().is_scancode_pressed(Scancode::D),
+        });
         canvas.clear_color(bgcolor);
-        canvas.fill_rect_color(player.color, player.shape);
+        canvas.fill_rect_color(player_color, game.player.shape.into());
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
     }
