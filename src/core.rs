@@ -14,6 +14,13 @@ impl std::ops::Add for Point {
     }
 }
 
+impl std::ops::AddAssign for Point {
+    fn add_assign(&mut self, other: Point) {
+        self.x += other.x;
+        self.y += other.y;
+    }
+}
+
 impl std::ops::Sub for Point {
     type Output = Point;
     fn sub(self, other: Point) -> Point {
@@ -63,8 +70,10 @@ impl Rect {
     }
 }
 
+#[derive(Debug)]
 pub struct Player {
     pub shape: Rect,
+    pub speed: Point,
 }
 
 pub struct Input {
@@ -85,30 +94,29 @@ impl Game {
             height,
             player: Player {
                 shape: Rect::new(0.0, 0.0, 100.0, 100.0),
+                speed: Point { x: 0.0, y: 0.0 },
             },
         }
     }
     pub fn step(&mut self, input: Input) {
-        let speed = 3.0;
-        let gravity = 3.0;
+        let speed = 5.0;
+        let gravity = 0.4;
 
         if self.player.shape.bottom() + gravity < self.height as f32 {
-            self.player.shape.position.y += gravity;
+            self.player.speed.y += gravity;
         } else {
+            self.player.speed.y = 0.0;
             self.player.shape.set_bottom(self.height as f32);
         }
 
-        let next_speed = {
-            let mut temp = 0.0;
-            if input.left {
-                temp -= speed;
-            }
-            if input.right {
-                temp += speed;
-            }
-            temp
-        };
+        self.player.speed.x = 0.0;
+        if input.left {
+            self.player.speed.x -= speed;
+        }
+        if input.right {
+            self.player.speed.x += speed;
+        }
 
-        self.player.shape.position.x += next_speed;
+        self.player.shape.position += self.player.speed;
     }
 }
