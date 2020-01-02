@@ -153,7 +153,7 @@ impl Game {
         if let Some(v) = value {
             *v as f32
         } else {
-            WIDTH as f32
+            self.height as f32
         }
     }
     pub fn step(&mut self, input: Input) {
