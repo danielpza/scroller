@@ -37,10 +37,15 @@ impl Into<sdl2::rect::Rect> for Rect {
     }
 }
 
+enum End {
+    Finish,
+    Quit,
+}
+
 fn game_loop(
     canvas: &mut sdl2::render::WindowCanvas,
     event_pump: &mut sdl2::EventPump,
-) -> Result<(), String> {
+) -> Result<End, String> {
     let sizey = 10;
     let sizex = 14;
     let scale = 60;
@@ -54,11 +59,11 @@ fn game_loop(
         // input
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit { .. }
-                | Event::KeyDown {
+                Event::Quit { .. } => break 'running Ok(End::Quit),
+                Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
-                } => break 'running,
+                } => break 'running Ok(End::Finish),
                 Event::KeyDown {
                     keycode: Some(Keycode::Return),
                     keymod: sdl2::keyboard::Mod::LCTRLMOD,
@@ -96,7 +101,6 @@ fn game_loop(
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
     }
-    Ok(())
 }
 
 fn main() -> Result<(), String> {
@@ -111,5 +115,10 @@ fn main() -> Result<(), String> {
         .unwrap();
     let mut canvas = window.into_canvas().present_vsync().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
-    game_loop(&mut canvas, &mut event_pump)
+    loop {
+        match game_loop(&mut canvas, &mut event_pump)? {
+            End::Finish => (),
+            End::Quit => break Ok(()),
+        }
+    }
 }
