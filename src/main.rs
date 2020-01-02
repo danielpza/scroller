@@ -11,12 +11,24 @@ use sdl2::render::Canvas;
 use sdl2::video::FullscreenType;
 use std::time::Duration;
 
-trait ExtCanvas<T> {
-    fn clear_color(&mut self, color: Color);
-    fn fill_rect_color(&mut self, color: Color, rect: sdl2::rect::Rect);
+struct Button {
+    // text: String,
+    rect: sdl2::rect::Rect,
 }
 
-impl<T: sdl2::render::RenderTarget> ExtCanvas<T> for Canvas<T> {
+impl Button {
+    pub fn new(rect: sdl2::rect::Rect) -> Button {
+        Button { rect }
+    }
+}
+
+trait ExtCanvas {
+    fn clear_color(&mut self, color: Color);
+    fn fill_rect_color(&mut self, color: Color, rect: sdl2::rect::Rect);
+    fn draw_button(&mut self, btn: &Button);
+}
+
+impl<T: sdl2::render::RenderTarget> ExtCanvas for Canvas<T> {
     fn clear_color(&mut self, color: Color) {
         self.set_draw_color(color);
         self.clear();
@@ -24,6 +36,9 @@ impl<T: sdl2::render::RenderTarget> ExtCanvas<T> for Canvas<T> {
     fn fill_rect_color(&mut self, color: Color, rect: sdl2::rect::Rect) {
         self.set_draw_color(color);
         self.fill_rect(rect).unwrap()
+    }
+    fn draw_button(&mut self, btn: &Button) {
+        self.fill_rect_color(Color::RGB(255, 255, 255), btn.rect);
     }
 }
 impl Into<sdl2::rect::Rect> for Rect {
@@ -108,8 +123,17 @@ fn main_menu_loop(
     canvas: &mut sdl2::render::WindowCanvas,
     event_pump: &mut sdl2::EventPump,
 ) -> Result<End, String> {
+    let btnw = 150;
+    let btnh = 50;
+    let mut btn_play = Button::new(sdl2::rect::Rect::new(0, 0, btnw, btnh));
+    let mut btn_quit = Button::new(sdl2::rect::Rect::new(0, 0, btnw, btnh));
+    let (w, h) = canvas.output_size()?;
+    btn_play.rect.center_on((w as i32 / 2, 100));
+    btn_quit.rect.center_on((w as i32 / 2, h as i32 - 100));
     loop {
         canvas.clear_color(Color::RGB(100, 100, 100));
+        canvas.draw_button(&btn_play);
+        canvas.draw_button(&btn_quit);
         canvas.present();
         let event = event_pump.wait_event();
         match event {
@@ -122,6 +146,14 @@ fn main_menu_loop(
                 keycode: Some(Keycode::Space),
                 ..
             } => break Ok(End::Play),
+            Event::MouseButtonUp { x, y, .. } => {
+                if btn_play.rect.contains_point(sdl2::rect::Point::new(x, y)) {
+                    break Ok(End::Play);
+                }
+                if btn_quit.rect.contains_point(sdl2::rect::Point::new(x, y)) {
+                    break Ok(End::Quit);
+                }
+            }
             _ => {}
         }
     }
