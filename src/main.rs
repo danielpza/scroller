@@ -91,7 +91,7 @@ fn main() -> Result<(), String> {
         canvas.clear_color(bgcolor);
         canvas.set_draw_color(block_color);
         let mut rect = sdl2::rect::Rect::new(0, 0, scale as u32, scale as u32);
-        for i in game.offset as usize..game.offset as usize + width as usize {
+        for i in game.offset as usize..game.offset as usize + sizex as usize + 1 {
             let h = game.map.get(i as i32);
             rect.set_x(((i as f32 - game.offset) * scale as f32) as i32);
             for j in h..sizey {
