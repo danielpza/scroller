@@ -4,6 +4,16 @@ pub struct Point {
     pub y: f32,
 }
 
+impl std::ops::Mul<f32> for Point {
+    type Output = Point;
+    fn mul(self, value: f32) -> Point {
+        Point {
+            x: self.x * value,
+            y: self.y * value,
+        }
+    }
+}
+
 impl std::ops::Add for Point {
     type Output = Point;
     fn add(self, other: Point) -> Point {
@@ -70,6 +80,16 @@ impl Rect {
     }
 }
 
+impl std::ops::Mul<f32> for Rect {
+    type Output = Rect;
+    fn mul(self, value: f32) -> Rect {
+        Rect {
+            position: self.position * value,
+            size: self.size * value,
+        }
+    }
+}
+
 fn force_to_jump(height: f32, gravity: f32) -> f32 {
     (2.0 * height * gravity).sqrt()
 }
@@ -98,14 +118,14 @@ impl Game {
             width,
             height,
             player: Player {
-                shape: Rect::new(0.0, 0.0, 100.0, 100.0),
+                shape: Rect::new(0.0, 0.0, 1.0, 1.0),
                 speed: Point { x: 0.0, y: 0.0 },
             },
         }
     }
     pub fn step(&mut self, input: Input) {
-        let speed = 5.0;
-        let gravity = 0.4;
+        let speed = 0.1;
+        let gravity = 0.01;
 
         if self.player.shape.bottom() + gravity < self.height as f32 {
             self.player.speed.y += gravity;

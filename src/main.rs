@@ -40,6 +40,8 @@ impl Into<sdl2::rect::Rect> for Rect {
 fn main() -> Result<(), String> {
     let width = 800;
     let height = 600;
+    let size = 10;
+    let scale = height as f32 / size as f32;
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
@@ -48,7 +50,7 @@ fn main() -> Result<(), String> {
         .build()
         .unwrap();
 
-    let mut game = core::Game::new(width as i32, height as i32);
+    let mut game = core::Game::new(size, size);
     let player_color = Color::RGB(255, 255, 255);
     let mut canvas = window.into_canvas().build().unwrap();
     let bgcolor = Color::RGB(100, 100, 100);
@@ -94,7 +96,7 @@ fn main() -> Result<(), String> {
             right: event_pump.keyboard_state().is_scancode_pressed(Scancode::D),
         });
         canvas.clear_color(bgcolor);
-        canvas.fill_rect_color(player_color, game.player.shape.into());
+        canvas.fill_rect_color(player_color, (game.player.shape * scale).into());
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
     }
