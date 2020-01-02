@@ -104,8 +104,6 @@ pub struct Player {
 }
 
 pub struct Input {
-    pub left: bool,
-    pub right: bool,
     pub jump: bool,
 }
 
@@ -116,6 +114,7 @@ pub struct Game {
     pub height: i32,
     pub floor: [i32; WIDTH as usize],
     pub player: Player,
+    pub offset: f32,
 }
 
 impl Game {
@@ -136,12 +135,13 @@ impl Game {
                 height - 2,
                 height - 2,
                 height - 2,
-                height - 2,
-                height - 2,
+                height - 3,
+                height - 4,
             ],
+            offset: 0.0,
             player: Player {
-                shape: Rect::new(1.0, 1.0, 0.8, 0.8),
-                speed: Point { x: 0.0, y: 0.0 },
+                shape: Rect::new(WIDTH as f32 / 3.0, 1.0, 0.8, 0.8),
+                speed: Point { x: 0.1, y: 0.0 },
             },
         }
     }
@@ -157,18 +157,11 @@ impl Game {
         }
     }
     pub fn step(&mut self, input: Input) {
-        let speed = 0.1;
         let gravity = 0.01;
+        let speed = 0.1;
 
+        self.player.speed.x = speed;
         self.player.speed.y += gravity;
-
-        self.player.speed.x = 0.0;
-        if input.left {
-            self.player.speed.x -= speed;
-        }
-        if input.right {
-            self.player.speed.x += speed;
-        }
 
         let under = self.get_top(
             self.player.shape.left().floor(),
@@ -200,5 +193,6 @@ impl Game {
         }
 
         self.player.shape.position += self.player.speed;
+        self.offset += speed;
     }
 }

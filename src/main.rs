@@ -5,7 +5,6 @@ use crate::core::*;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::keyboard::Scancode;
 use sdl2::pixels::Color;
 use sdl2::render::Canvas;
 use sdl2::video::FullscreenType;
@@ -91,22 +90,20 @@ fn main() -> Result<(), String> {
                 _ => {}
             }
         }
-        game.step(Input {
-            jump,
-            left: event_pump.keyboard_state().is_scancode_pressed(Scancode::A),
-            right: event_pump.keyboard_state().is_scancode_pressed(Scancode::D),
-        });
+        game.step(Input { jump });
         canvas.clear_color(bgcolor);
         canvas.set_draw_color(block_color);
         let mut rect = sdl2::rect::Rect::new(0, 0, scale as u32, scale as u32);
         for (i, h) in game.floor.iter().enumerate() {
-            rect.set_x(i as i32 * scale as i32);
+            rect.set_x(((i as f32 - game.offset) * scale as f32) as i32);
             for j in *h..sizey {
                 rect.set_y(j as i32 * scale as i32);
                 canvas.fill_rect(rect)?;
             }
         }
-        canvas.fill_rect_color(player_color, (game.player.shape * scale).into());
+        let mut rect = game.player.shape;
+        rect.position.x -= game.offset;
+        canvas.fill_rect_color(player_color, (rect * scale).into());
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
     }
