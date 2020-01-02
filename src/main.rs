@@ -57,6 +57,7 @@ fn main() -> Result<(), String> {
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
+        let mut jump = false;
         // input
         for event in event_pump.poll_iter() {
             match event {
@@ -65,6 +66,11 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::KeyDown {
+                    keycode: Some(Keycode::W),
+                    repeat: false,
+                    ..
+                } => jump = true,
                 Event::KeyDown {
                     keycode: Some(Keycode::Return),
                     keymod: sdl2::keyboard::Mod::LCTRLMOD,
@@ -83,6 +89,7 @@ fn main() -> Result<(), String> {
             }
         }
         game.step(Input {
+            jump,
             left: event_pump.keyboard_state().is_scancode_pressed(Scancode::A),
             right: event_pump.keyboard_state().is_scancode_pressed(Scancode::D),
         });

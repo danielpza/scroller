@@ -70,6 +70,10 @@ impl Rect {
     }
 }
 
+fn force_to_jump(height: f32, gravity: f32) -> f32 {
+    (2.0 * height * gravity).sqrt()
+}
+
 #[derive(Debug)]
 pub struct Player {
     pub shape: Rect,
@@ -79,6 +83,7 @@ pub struct Player {
 pub struct Input {
     pub left: bool,
     pub right: bool,
+    pub jump: bool,
 }
 
 pub struct Game {
@@ -107,6 +112,9 @@ impl Game {
         } else {
             self.player.speed.y = 0.0;
             self.player.shape.set_bottom(self.height as f32);
+            if input.jump {
+                self.player.speed.y = -force_to_jump(self.player.shape.size.y * 1.2, gravity);
+            }
         }
 
         self.player.speed.x = 0.0;
