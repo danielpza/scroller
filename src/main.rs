@@ -7,28 +7,16 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::keyboard::Scancode;
 use sdl2::pixels::Color;
-use sdl2::render::Canvas;
 use sdl2::video::FullscreenType;
 use std::time::Duration;
-
-struct Button {
-    // text: String,
-    rect: sdl2::rect::Rect,
-}
-
-impl Button {
-    pub fn new(rect: sdl2::rect::Rect) -> Button {
-        Button { rect }
-    }
-}
 
 trait ExtCanvas {
     fn clear_color(&mut self, color: Color);
     fn fill_rect_color(&mut self, color: Color, rect: sdl2::rect::Rect);
-    fn draw_button(&mut self, btn: &Button);
+    fn toggle_fullscreen(&mut self) -> Result<(), String>;
 }
 
-impl<T: sdl2::render::RenderTarget> ExtCanvas for Canvas<T> {
+impl ExtCanvas for sdl2::render::WindowCanvas {
     fn clear_color(&mut self, color: Color) {
         self.set_draw_color(color);
         self.clear();
@@ -37,8 +25,14 @@ impl<T: sdl2::render::RenderTarget> ExtCanvas for Canvas<T> {
         self.set_draw_color(color);
         self.fill_rect(rect).unwrap()
     }
-    fn draw_button(&mut self, btn: &Button) {
-        self.fill_rect_color(Color::RGB(255, 255, 255), btn.rect);
+    fn toggle_fullscreen(&mut self) -> Result<(), String> {
+        let window = self.window_mut();
+        window.set_fullscreen(if window.fullscreen_state() == FullscreenType::True {
+            FullscreenType::Off
+        } else {
+            FullscreenType::True
+        })?;
+        Ok(())
     }
 }
 impl Into<sdl2::rect::Rect> for Rect {
@@ -84,16 +78,7 @@ fn game_loop(
                     keycode: Some(Keycode::Return),
                     keymod: sdl2::keyboard::Mod::LCTRLMOD,
                     ..
-                } => {
-                    let window = canvas.window_mut();
-                    window.set_fullscreen(
-                        if window.fullscreen_state() == FullscreenType::True {
-                            FullscreenType::Off
-                        } else {
-                            FullscreenType::True
-                        },
-                    )?;
-                }
+                } => canvas.toggle_fullscreen()?,
                 _ => {}
             }
         }
@@ -122,18 +107,32 @@ fn game_loop(
 fn main_menu_loop(
     canvas: &mut sdl2::render::WindowCanvas,
     event_pump: &mut sdl2::EventPump,
+    font: &sdl2::ttf::Font,
 ) -> Result<End, String> {
     let btnw = 150;
     let btnh = 50;
-    let mut btn_play = Button::new(sdl2::rect::Rect::new(0, 0, btnw, btnh));
-    let mut btn_quit = Button::new(sdl2::rect::Rect::new(0, 0, btnw, btnh));
+    let texture_creator = canvas.texture_creator();
+    let render_font = |text: &str| {
+        let surface = font.render(text).blended(Color::RGB(0, 0, 0)).unwrap();
+        let texture = texture_creator
+            .create_texture_from_surface(&surface)
+            .unwrap();
+        texture
+    };
+    let btn_color = Color::RGB(255, 255, 255);
     let (w, h) = canvas.output_size()?;
-    btn_play.rect.center_on((w as i32 / 2, 100));
-    btn_quit.rect.center_on((w as i32 / 2, h as i32 - 100));
+    let mut btn_play_rect = sdl2::rect::Rect::new(0, 0, btnw, btnh);
+    btn_play_rect.center_on((w as i32 / 2, 100));
+    let btn_play_texture = render_font("PLAY");
+    let mut btn_quit_rect = sdl2::rect::Rect::new(0, 0, btnw, btnh);
+    btn_quit_rect.center_on((w as i32 / 2, h as i32 - 100));
+    let btn_quit_texture = render_font("QUIT");
     loop {
         canvas.clear_color(Color::RGB(100, 100, 100));
-        canvas.draw_button(&btn_play);
-        canvas.draw_button(&btn_quit);
+        canvas.fill_rect_color(btn_color, btn_play_rect);
+        canvas.fill_rect_color(btn_color, btn_quit_rect);
+        canvas.copy(&btn_play_texture, None, Some(btn_play_rect))?;
+        canvas.copy(&btn_quit_texture, None, Some(btn_quit_rect))?;
         canvas.present();
         let event = event_pump.wait_event();
         match event {
@@ -146,11 +145,16 @@ fn main_menu_loop(
                 keycode: Some(Keycode::Space),
                 ..
             } => break Ok(End::Play),
+            Event::KeyDown {
+                keycode: Some(Keycode::Return),
+                keymod: sdl2::keyboard::Mod::LCTRLMOD,
+                ..
+            } => canvas.toggle_fullscreen()?,
             Event::MouseButtonUp { x, y, .. } => {
-                if btn_play.rect.contains_point(sdl2::rect::Point::new(x, y)) {
+                if btn_play_rect.contains_point(sdl2::rect::Point::new(x, y)) {
                     break Ok(End::Play);
                 }
-                if btn_quit.rect.contains_point(sdl2::rect::Point::new(x, y)) {
+                if btn_quit_rect.contains_point(sdl2::rect::Point::new(x, y)) {
                     break Ok(End::Quit);
                 }
             }
@@ -163,6 +167,9 @@ fn main() -> Result<(), String> {
     let width = 800;
     let height = 600;
     let sdl_context = sdl2::init()?;
+    let ttf_context = sdl2::ttf::init().unwrap();
+    let font_path = std::path::Path::new("VCR_OSD_MONO_1.001.ttf");
+    let font = ttf_context.load_font(font_path, 128)?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
         .window("scroller", width, height)
@@ -173,7 +180,7 @@ fn main() -> Result<(), String> {
     let mut event_pump = sdl_context.event_pump().unwrap();
     event_pump.disable_event(sdl2::event::EventType::MouseMotion);
     loop {
-        match main_menu_loop(&mut canvas, &mut event_pump)? {
+        match main_menu_loop(&mut canvas, &mut event_pump, &font)? {
             End::Play => match game_loop(&mut canvas, &mut event_pump)? {
                 End::Quit => break Ok(()),
                 _ => (),

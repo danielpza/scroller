@@ -18,3 +18,7 @@ Checkout https://github.com/Rust-SDL2/rust-sdl2#requirements.
 $ cargo build
 $ cargo run
 ```
+
+## Credits
+
+- font: https://www.dafont.com/vcr-osd-mono.font
