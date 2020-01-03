@@ -115,13 +115,10 @@ fn main_menu_loop(
     let bg_color = Color::RGB(255, 255, 255);
     let font_color = Color::RGB(0, 0, 0);
     let btn_color = Color::RGB(200, 200, 200);
-    let scale_down = |rect: sdl2::rect::Rect, perc: f32| {
+    let with_margin = |rect: sdl2::rect::Rect| {
         let mut cp = rect;
         let center = cp.center();
-        cp.resize(
-            (cp.width() as f32 * perc) as u32,
-            (cp.height() as f32 * perc) as u32,
-        );
+        cp.resize(cp.width() - 40, cp.height() - 20);
         cp.center_on(center);
         cp
     };
@@ -139,19 +136,20 @@ fn main_menu_loop(
     let mut btn_quit_rect = sdl2::rect::Rect::new(0, 0, btnw, btnh);
     btn_quit_rect.center_on((w as i32 / 2, h as i32 - 100));
     let btn_quit_texture = render_font("QUIT");
+    let mut btn_fullscreen_rect = sdl2::rect::Rect::new(0, 0, btnw * 2, btnh);
+    btn_fullscreen_rect.center_on((w as i32 / 2, 100 + btnh as i32 * 2));
+    let btn_fullscreen_texture = render_font("FULLSCREEN");
     loop {
         canvas.clear_color(bg_color);
         canvas.fill_rect_color(btn_color, btn_play_rect);
         canvas.fill_rect_color(btn_color, btn_quit_rect);
+        canvas.fill_rect_color(btn_color, btn_fullscreen_rect);
+        canvas.copy(&btn_play_texture, None, Some(with_margin(btn_play_rect)))?;
+        canvas.copy(&btn_quit_texture, None, Some(with_margin(btn_quit_rect)))?;
         canvas.copy(
-            &btn_play_texture,
+            &btn_fullscreen_texture,
             None,
-            Some(scale_down(btn_play_rect, 0.75)),
-        )?;
-        canvas.copy(
-            &btn_quit_texture,
-            None,
-            Some(scale_down(btn_quit_rect, 0.75)),
+            Some(with_margin(btn_fullscreen_rect)),
         )?;
         canvas.present();
         let event = event_pump.wait_event();
@@ -176,6 +174,9 @@ fn main_menu_loop(
                 }
                 if btn_quit_rect.contains_point(sdl2::rect::Point::new(x, y)) {
                     break Ok(End::Quit);
+                }
+                if btn_fullscreen_rect.contains_point(sdl2::rect::Point::new(x, y)) {
+                    canvas.toggle_fullscreen()?;
                 }
             }
             _ => {}
