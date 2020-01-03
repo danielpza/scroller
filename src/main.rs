@@ -112,14 +112,26 @@ fn main_menu_loop(
     let btnw = 150;
     let btnh = 50;
     let texture_creator = canvas.texture_creator();
+    let bg_color = Color::RGB(255, 255, 255);
+    let font_color = Color::RGB(0, 0, 0);
+    let btn_color = Color::RGB(200, 200, 200);
+    let scale_down = |rect: sdl2::rect::Rect, perc: f32| {
+        let mut cp = rect;
+        let center = cp.center();
+        cp.resize(
+            (cp.width() as f32 * perc) as u32,
+            (cp.height() as f32 * perc) as u32,
+        );
+        cp.center_on(center);
+        cp
+    };
     let render_font = |text: &str| {
-        let surface = font.render(text).blended(Color::RGB(0, 0, 0)).unwrap();
+        let surface = font.render(text).blended(font_color).unwrap();
         let texture = texture_creator
             .create_texture_from_surface(&surface)
             .unwrap();
         texture
     };
-    let btn_color = Color::RGB(255, 255, 255);
     let (w, h) = canvas.output_size()?;
     let mut btn_play_rect = sdl2::rect::Rect::new(0, 0, btnw, btnh);
     btn_play_rect.center_on((w as i32 / 2, 100));
@@ -128,11 +140,19 @@ fn main_menu_loop(
     btn_quit_rect.center_on((w as i32 / 2, h as i32 - 100));
     let btn_quit_texture = render_font("QUIT");
     loop {
-        canvas.clear_color(Color::RGB(100, 100, 100));
+        canvas.clear_color(bg_color);
         canvas.fill_rect_color(btn_color, btn_play_rect);
         canvas.fill_rect_color(btn_color, btn_quit_rect);
-        canvas.copy(&btn_play_texture, None, Some(btn_play_rect))?;
-        canvas.copy(&btn_quit_texture, None, Some(btn_quit_rect))?;
+        canvas.copy(
+            &btn_play_texture,
+            None,
+            Some(scale_down(btn_play_rect, 0.75)),
+        )?;
+        canvas.copy(
+            &btn_quit_texture,
+            None,
+            Some(scale_down(btn_quit_rect, 0.75)),
+        )?;
         canvas.present();
         let event = event_pump.wait_event();
         match event {
