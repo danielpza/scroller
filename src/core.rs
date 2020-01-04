@@ -158,6 +158,7 @@ pub struct Game {
     pub player: Player,
     pub offset: f32,
     pub map: Map,
+    pub difficulty: u32,
 }
 
 impl Game {
@@ -165,6 +166,7 @@ impl Game {
         Game {
             width,
             height,
+            difficulty: 0,
             map: Map::new(height),
             offset: 0.0,
             player: Player {
@@ -176,8 +178,10 @@ impl Game {
 
     pub fn step(&mut self, input: Input) {
         let gravity = 0.01;
-        let speed = 0.1;
+        let mult = 10000.0;
+        let speed = 0.1 * (mult + self.difficulty as f32) / mult;
         let player_speed = speed * 1.2;
+        self.difficulty += 1;
 
         self.map.build(self.offset as i32 + self.width);
         self.player.speed.x = player_speed;
