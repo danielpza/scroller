@@ -60,9 +60,9 @@ fn game_loop(
     let sizex = 14;
     let scale = 60;
     let mut game = core::Game::new(sizex, sizey);
-    let player_color = Color::RGB(255, 255, 255);
-    let bgcolor = Color::RGB(100, 100, 100);
-    let block_color = Color::RGB(10, 10, 10);
+    let player_color = Color::RGB(200, 160, 70);
+    let bgcolor = Color::RGB(180, 200, 180);
+    let block_color = Color::RGB(50, 200, 50);
     canvas.clear_color(bgcolor);
     canvas.present();
     'running: loop {
