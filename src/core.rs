@@ -177,9 +177,10 @@ impl Game {
     pub fn step(&mut self, input: Input) {
         let gravity = 0.01;
         let speed = 0.1;
+        let player_speed = speed * 1.2;
 
         self.map.build(self.offset as i32 + self.width);
-        self.player.speed.x = speed;
+        self.player.speed.x = player_speed;
         self.player.speed.y += gravity;
 
         let under = self.map.get_top(
@@ -212,6 +213,10 @@ impl Game {
         }
 
         self.player.shape.position += self.player.speed;
-        self.offset = self.player.shape.left() - 3.0;
+        self.offset = (self.offset + speed).max(self.player.shape.left() - 8.0);
+    }
+
+    pub fn alive(&self) -> bool {
+        self.offset < self.player.shape.right()
     }
 }

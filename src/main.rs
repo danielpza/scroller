@@ -85,10 +85,13 @@ fn game_loop(
         game.step(Input {
             jump: event_pump.keyboard_state().is_scancode_pressed(Scancode::W),
         });
+        if !game.alive() {
+            break Ok(End::Finish);
+        }
         canvas.clear_color(bgcolor);
         canvas.set_draw_color(block_color);
         let mut rect = sdl2::rect::Rect::new(0, 0, scale as u32, scale as u32);
-        for i in game.offset as usize..game.offset as usize + sizex as usize + 1 {
+        for i in game.offset as i32..game.offset as i32 + sizex as i32 + 1 {
             let h = game.map.get(i as i32);
             rect.set_x(((i as f32 - game.offset) * scale as f32) as i32);
             for j in h..sizey {
