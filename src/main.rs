@@ -2,6 +2,7 @@ extern crate sdl2;
 
 mod core;
 use crate::core::*;
+use crate::sdl2::image::LoadTexture;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -62,7 +63,9 @@ fn game_loop(
     let mut game = core::Game::new(sizex, sizey);
     let player_color = Color::RGB(255, 255, 255);
     let bgcolor = Color::RGB(100, 100, 100);
-    let block_color = Color::RGB(10, 10, 10);
+    let texture_creator = canvas.texture_creator();
+    let grass_texture = texture_creator.load_texture(std::path::Path::new("grass.bmp"))?;
+    let bg_texture = texture_creator.load_texture(std::path::Path::new("background.bmp"))?;
     canvas.clear_color(bgcolor);
     canvas.present();
     'running: loop {
@@ -89,14 +92,14 @@ fn game_loop(
             break Ok(End::Finish);
         }
         canvas.clear_color(bgcolor);
-        canvas.set_draw_color(block_color);
+        canvas.copy(&bg_texture, None, None)?;
         let mut rect = sdl2::rect::Rect::new(0, 0, scale as u32, scale as u32);
         for i in game.offset as i32..game.offset as i32 + sizex as i32 + 1 {
             let h = game.map.get(i as i32);
             rect.set_x(((i as f32 - game.offset) * scale as f32) as i32);
             for j in h..sizey {
                 rect.set_y(j as i32 * scale as i32);
-                canvas.fill_rect(rect)?;
+                canvas.copy(&grass_texture, None, rect)?;
             }
         }
         let mut rect = game.player.shape;
@@ -200,6 +203,7 @@ fn main() -> Result<(), String> {
         .position_centered()
         .build()
         .unwrap();
+
     let mut canvas = window.into_canvas().present_vsync().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
     event_pump.disable_event(sdl2::event::EventType::MouseMotion);
