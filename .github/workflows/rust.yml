@@ -8,12 +8,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Build
-      run: cargo build --verbose
     - name: Get Package
       uses: mstksg/get-package@v1
       with:
         apt-get: libsdl2
+    - uses: actions/checkout@v1
+    - name: Build
+      run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
