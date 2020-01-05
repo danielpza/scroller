@@ -11,5 +11,9 @@ jobs:
     - uses: actions/checkout@v1
     - name: Build
       run: cargo build --verbose
+    - name: Get Package
+      uses: mstksg/get-package@v1
+      with:
+        apt-get: libsdl2
     - name: Run tests
       run: cargo test --verbose
