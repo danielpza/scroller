@@ -11,7 +11,7 @@ jobs:
     - name: Get Package
       uses: mstksg/get-package@v1
       with:
-        apt-get: libsdl2
+        apt-get: libsdl2-2.0-0 libsdl2-dev
     - uses: actions/checkout@v1
     - name: Build
       run: cargo build --verbose
