@@ -111,7 +111,7 @@ pub struct Input {
     pub jump: bool,
 }
 
-const WIDTH: i32 = 15;
+const WIDTH: i32 = 30;
 
 pub struct Map {
     height: i32,
@@ -128,7 +128,7 @@ impl Map {
         }
     }
     pub fn get_top(&self, from: i32, to: i32) -> i32 {
-        let mut top = self.height;
+        let mut top = self.height + 10;
         for i in from..to {
             top = top.min(self.get(i));
         }
@@ -144,11 +144,27 @@ impl Map {
         self.floor[self.clip_index(pos)] = value;
     }
     pub fn build(&mut self, to: i32) {
-        for i in self.prev + 1..to + 1 {
-            let random = rand::thread_rng().gen_range(-1, 2);
-            self.set(i, (self.get(i - 1) + random).max(3).min(self.height - 1));
+        let mut i = self.prev + 1;
+        while i <= to {
+            let choice = rand::thread_rng().gen_range(0, 20);
+            if choice == 0 {
+                let prev = self.get(i - 1);
+                self.set(i, self.height + 1);
+                self.set(i + 1, self.height + 1);
+                self.set(i + 2, prev);
+                i += 3;
+            } else {
+                let random_height = rand::thread_rng().gen_range(-1, 2);
+                self.set(
+                    i,
+                    (self.get(i - 1) + random_height)
+                        .max(3)
+                        .min(self.height - 1),
+                );
+                i += 1;
+            }
         }
-        self.prev = to;
+        self.prev = i - 1;
     }
 }
 
@@ -221,6 +237,6 @@ impl Game {
     }
 
     pub fn alive(&self) -> bool {
-        self.offset < self.player.shape.right()
+        self.offset < self.player.shape.right() && self.player.shape.top() < self.height as f32
     }
 }
